@@ -1,7 +1,7 @@
 <?php
 function sql($db,$command)
    {
-   $connection = mysqli_connect ('localhost', 'root', 'tpw100', $db);
+   $connection = mysqli_connect ('localhost', 'root', '******', $db);
     if ($connection -> connect_errno)
      {
         print "Failed to open database!<br>\n";
