@@ -1,7 +1,9 @@
 <?php
 function sql($db,$command)
    {
-   $connection = mysqli_connect ('localhost', 'root', '******', $db);
+   #$db='u469727502_map';
+   $connection = mysqli_connect ('localhost', 'root', 'tpw100', $db);
+   #$connection = mysqli_connect ('185.212.70.52', 'u469727502_u469727502_', 'Palmeiras_2022', $db);
     if ($connection -> connect_errno)
      {
         print "Failed to open database!<br>\n";

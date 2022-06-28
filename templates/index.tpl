@@ -2,81 +2,83 @@
 {block name=main}
 
 <div class="grid-container">
-<div class="coluna1">
-<div id="map" style="width: 900px; height: 600px;"></div>
+<div id='map'></div>
+<div>
+<strong>Campus no estado:</strong>
+<br>
+{section name=i loop=$campi}
+	<a href="./campi.php?id={$campi[i].id}&lat={$campi[i].latitude}&lon={$campi[i].longitude}&nome={$campi[i].cidade}">{$campi[i].nome}</a><br>
+{/section}
+</div>
+
 <script>
-	var map = L.map('map').setView([{$lat}, {$lon}], 7);
+var cities = L.layerGroup();
+var eja = L.layerGroup();
+var ead = L.layerGroup();
+var eadPres = L.layerGroup();
+var presencial = L.layerGroup();
+
+{section name=i loop=$campi}
+	L.marker([{$campi[i].latitude}, {$campi[i].longitude}]).bindPopup("{$campi[i].nome}.<br>{$campi[i].endereco}").addTo(cities);
+{/section}
+
+{section name=i loop=$eja}
+	L.marker([{$eja[i].latitude}, {$eja[i].longitude}]).bindPopup("{$eja[i].campi}.<br>{$eja[i].endereco}").addTo(eja);
+{/section}
+
+{section name=i loop=$ead}
+	L.marker([{$ead[i].latitude}, {$ead[i].longitude}]).bindPopup("{$ead[i].curso}.<br>{$ead[i].endereco}").addTo(ead);
+{/section}
+
+{section name=i loop=$eadPresencial}
+	L.marker([{$eadPresencial[i].latitude}, {$eadPresencial[i].longitude}]).bindPopup("{$eadPresencial[i].curso}.<br>{$eadPresencial[i].endereco}").addTo(eadPres);
+{/section}
+
+{section name=i loop=$presencial}
+	L.marker([{$presencial[i].latitude}, {$presencial[i].longitude}]).bindPopup("{$presencial[i].curso}.<br>{$presencial[i].endereco}").addTo(presencial);
+{/section}
+
 
 {literal}
-	var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 18,
-		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-		id: 'mapbox/streets-v11',
-		tileSize: 512,
-		zoomOffset: -1
-	}).addTo(map);
+	var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
+	var mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+	var grayscale = L.tileLayer(mbUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
+	var streets = L.tileLayer(mbUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
+	var satellite = L.tileLayer(mbUrl, {id: 'mapbox/satellite-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
+	
 {/literal}
+    
 
-       {section name=i loop=$m_parte}
-                 var marker = L.marker([{$m_parte[i].lat}, {$m_parte[i].lng}]).addTo(map) 
-                         .bindPopup('<b>{$m_parte[i].name}</b><br />{$m_parte[i].address|escape:"html"}');
-       {/section}
+	var map = L.map('map', {
+		center: [{$lat}, {$lon}],
+		zoom: 7,
+		layers: [grayscale, cities]
+	});
 
-	function onMapClick(e) {
-		popup
-			.setLatLng(e.latlng)
-			.setContent('You clicked the map at ' + e.latlng.toString())
-			.openOn(map);
-	}
+	var baseLayers = {
+		'Grayscale': grayscale,
+		'Streets': streets,
+		'Satellite':satellite
+	};
 
-	map.on('click', onMapClick);
+	var overlays = {
+		'Campus do IFSP': cities
+	
+	};
+
+	var layerControl = L.control.layers(baseLayers, overlays).addTo(map);
+
+//	var crownHill = L.marker([-22.75, -48.09]).bindPopup('This is Crown Hill Park.');
+//	var rubyHill = L.marker([-22.68, -48.00]).bindPopup('This is Ruby Hill Park.');
+
+//	var parks = L.layerGroup([crownHill, rubyHill]);
+//	layerControl.addOverlay(parks, 'Parks');
+
+	layerControl.addOverlay(eja, 'EJA');
+	layerControl.addOverlay(ead, 'EAD');
+	layerControl.addOverlay(eadPres, 'EAD+Presencial');
+	layerControl.addOverlay(presencial, 'Presencial');
 
 </script>
-</div>
-<div class="coluna2">
-	<form method="post" action="index.php">
-
-	<div class="row">
-		<div class="col-12"
-			<label>Modalidade:</label>
-			<select name="modalidade" {$f_status_modalidade}>
-				{section name=j loop=$modalidade}
-				<option value="{$modalidade[j].id}">{$modalidade[j].descricao}</option>
-				{/section}
-			</select>
-			<input type="submit" name="escolher" value="Escolher" {$f_status_modalidade}>
-		</div>
-	</div>
-
-	<div class="row">
-		<div class="col-2>"
-			<label>Curso:</label>
-			<select name="curso" {$f_status_curso}>
-				{section name=k loop=$curso}
-				<option value="{$curso[k].id}">{$curso[k].nome}</option>
-				{/section}
-			</select>
-			<input type="submit" name="escolher_curso" value="Escolher">
-		</div>
-	</div>
-
-	</form>
-	<div class="saida">
-		<p><strong>{$descricao}</strong></p>
-		<ul>
-			{section name=j loop=$m_parte}
-				<li>{$m_parte[j].name}</li>
-			{/section}
-		</ul>
-	</div>
-</div>
-
-<div class="coluna3">
-xxxxx
-</div>
-<div class="coluna4">
-xxxxx
-</div>
-</div>
 {/block}
